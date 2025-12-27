@@ -374,6 +374,29 @@ class CarlaClient:
         lights = [light for light in self.world.get_actors() if 'traffic_light' in light.type_id]
         return lights[:5]  # 只返回前5个
 
+    async def spawn_pedestrian(self, pedestrian_type='walker'):
+        """生成行人"""
+        try:
+            # 查找行人蓝图
+            blueprint_library = self.world.get_blueprint_library()
+            walker_blueprints = blueprint_library.filter('walker.pedestrian.*')
+            if not walker_blueprints:
+                app_logger.error("❌ 未找到行人蓝图")
+                return None
+            
+            blueprint = walker_blueprints[0]  # 使用第一个找到的行人蓝图
+            spawn_point = self.world.get_map().get_spawn_points()[0]
+            # 设置随机位置偏移，避免与车辆重叠
+            spawn_point.location.x += 5.0
+            
+            pedestrian = self.world.spawn_actor(blueprint, spawn_point)
+            self.actors.append(pedestrian)
+            app_logger.info(f"🚶 生成行人: {pedestrian_type}")
+            return pedestrian
+        except Exception as e:
+            app_logger.error(f"❌ 生成行人失败: {str(e)}")
+            return None
+
     async def cleanup(self):
         """清理环境"""
         for actor in self.actors:
@@ -425,6 +448,14 @@ async def cleanup_scene_impl(**kwargs) -> str:
     return "✅ 已清理所有车辆和物体"
 
 
+async def spawn_pedestrian_impl(query: str, **kwargs) -> str:
+    """（实际功能：生成行人）"""
+    pedestrian = await carla_client.spawn_pedestrian(query)
+    if pedestrian:
+        return f"✅ 已生成行人: {query} (ID: {pedestrian.id})"
+    return "❌ 行人生成失败"
+
+
 # ============ FastMCP 工具装饰器版本 ============
 
 @mcp.tool()
@@ -456,6 +487,12 @@ async def get_traffic_lights(query: str, user_type: Optional[str] = None) -> str
 async def cleanup_scene(language: Optional[str] = None, period: str = "daily") -> str:
     """（实际功能：清理环境）"""
     return await cleanup_scene_impl()
+
+
+@mcp.tool()
+async def spawn_pedestrian(query: str, user_type: Optional[str] = None) -> str:
+    """（实际功能：生成行人）"""
+    return await spawn_pedestrian_impl(query)
 
 
 @mcp.tool()
@@ -557,6 +594,20 @@ class FastMCPGitHubAssistant:
                     "parameters": {
                         "type": "object",
                         "properties": {}
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "spawn_pedestrian",
+                    "description": "生成行人",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": "string", "description": "行人类型，默认为walker"}
+                        },
+                        "required": ["query"]
                     }
                 }
             },
@@ -766,6 +817,16 @@ class FastMCPGitHubAssistant:
                     "success": True,
                     "data": result
                 }
+            
+            elif function_name == "spawn_pedestrian":
+                result = await spawn_pedestrian_impl(
+                    query=arguments["query"],
+                    user_type=arguments.get("user_type")
+                )
+                return {
+                    "success": True,
+                    "data": result
+                }
             elif function_name == "search_github_repositories":
                 result = await search_github_repositories_impl(
                     query=arguments["query"],
@@ -837,9 +898,10 @@ GitHub功能：
 CARLA仿真功能：
 5. connect_carla - 连接CARLA服务器（默认localhost:2000）
 6. spawn_vehicle - 生成车辆（model3/a2/mustang）
-7. set_weather - 设置天气（clear/rain/fog）
-8. get_traffic_lights - 查看交通灯状态
-9. cleanup_scene - 清理仿真场景
+7. spawn_pedestrian - 生成行人
+8. set_weather - 设置天气（clear/rain/fog）
+9. get_traffic_lights - 查看交通灯状态
+10. cleanup_scene - 清理仿真场景
 
 处理用户查询的策略：
 GitHub相关：
@@ -850,6 +912,7 @@ GitHub相关：
 
 CARLA相关：
 - 如果用户提到"车辆"、"生成"、"创建汽车"等，使用spawn_vehicle
+- 如果用户提到"行人"、"生成行人"、"创建行人"等，使用spawn_pedestrian
 - 如果用户提到"天气"、"下雨"、"晴天"、"雾天"等，使用set_weather
 - 如果用户提到"交通灯"、"信号灯"、"红绿灯"等，使用get_traffic_lights
 - 如果用户提到"清理"、"重置"、"清除场景"等，使用cleanup_scene
@@ -867,6 +930,7 @@ CARLA相关：
 用户指令示例：
 - "连接carla服务器" -> connect_carla(host="localhost", port=2000)
 - "生成一辆model3" -> spawn_vehicle(vehicle_type="model3")
+- "生成行人" -> spawn_pedestrian(pedestrian_type="walker")
 - "设置雨天" -> set_weather(weather_type="rain")
 - "查看交通灯" -> get_traffic_lights()
 - "清理场景" -> cleanup_scene()
