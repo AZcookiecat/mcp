@@ -33,7 +33,7 @@ WindowsNoEditor/
 ├── CarlaUE4.exe            
 └── hutb.bat      
 ```      
-3. 检查 `llm/.env` 文件中的Github和Deeopseek API密钥已配置
+3. 检查 `llm/.env` 文件中的Github和Deepseek API密钥已配置
 4. 双击 `hutb.bat` 启动模拟器
 
 
