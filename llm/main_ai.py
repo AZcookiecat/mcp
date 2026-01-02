@@ -340,6 +340,7 @@ class CarlaClient:
             vehicle = self.world.spawn_actor(blueprint, spawn_point)
             self.actors.append(vehicle)
             app_logger.info(f"🚗 生成车辆: {vehicle_type}")
+
             return vehicle
         except Exception as e:
             app_logger.error(f"❌ 生成车辆失败: {str(e)}")
@@ -392,10 +393,43 @@ class CarlaClient:
             pedestrian = self.world.spawn_actor(blueprint, spawn_point)
             self.actors.append(pedestrian)
             app_logger.info(f"🚶 生成行人: {pedestrian_type}")
+            
+            # 将视角对准生成的行人
+            self.set_spectator_view(pedestrian)
             return pedestrian
         except Exception as e:
             app_logger.error(f"❌ 生成行人失败: {str(e)}")
             return None
+
+    def set_spectator_view(self, target_actor):
+        """将视角对准目标actor"""
+        try:
+            spectator = self.world.get_spectator()
+            target_transform = target_actor.get_transform()
+            
+            # 设置相机位置在目标actor前方5米，上方2米处
+            # 这样可以从正面看到行人
+            camera_location = carla.Location(
+                x=target_transform.location.x + 5.0,  # 前方5米
+                y=target_transform.location.y,
+                z=target_transform.location.z + 2.0
+            )
+            
+            # 计算相机朝向，指向行人
+            # yaw=180.0 让相机朝向行人方向
+            camera_rotation = carla.Rotation(
+                pitch=-15.0,  # 略微向下看
+                yaw=180.0,    # 朝向行人
+                roll=0.0
+            )
+            
+            camera_transform = carla.Transform(camera_location, camera_rotation)
+            spectator.set_transform(camera_transform)
+            app_logger.info(f"👁️  视角已对准actor {target_actor.id}")
+            return True
+        except Exception as e:
+            app_logger.error(f"❌ 设置视角失败: {str(e)}")
+            return False
 
     async def cleanup(self):
         """清理环境"""

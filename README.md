@@ -23,18 +23,12 @@ graph LR
 
 ## 集成版
 能够在未安装Python和UE4的情况下启动
-1. 下载 [发布页面](https://github.com/OpenHUTB/hutb/releases) 中的对应的文件并解压
-2. 下载 [虚拟环境、启动脚本及MCP文件](https://pan.baidu.com/s/1TNH-9wZYNy4NhmWJSoZL5A?pwd=hutb)中的`env.UE4-hutb_v1.0.zip`文件，解压到`WindowsNoEditor`文件夹下，确认项目结构如下所示
-```
-WindowsNoEditor/  
-├── env.UE4-hutb/                        
-├── llm/ 
-│   └── .env
-├── CarlaUE4.exe            
-└── hutb.bat      
-```      
-3. 检查 `llm/.env` 文件中的Github和Deepseek API密钥已配置
-4. 双击 `hutb.bat` 启动模拟器
+
+下载 [HUTB项目](https://pan.baidu.com/s/1TNH-9wZYNy4NhmWJSoZL5A?pwd=hutb)中的`hutb_v1.0.zip`文件，解压到`WindowsNoEditor`文件夹下，双击 `hutb.bat` 启动模拟器
+
+可通过修改
+`llm/.env` 文件中的Github和Deepseek API密钥进行配置
+
 
 
 ### 1.1 大模型
