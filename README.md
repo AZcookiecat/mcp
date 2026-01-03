@@ -26,8 +26,7 @@ graph LR
 
 下载 [HUTB项目](https://pan.baidu.com/s/1TNH-9wZYNy4NhmWJSoZL5A?pwd=hutb)中的`hutb_v1.0.zip`文件，解压到`WindowsNoEditor`文件夹下，双击 `hutb.bat` 启动模拟器
 
-可通过修改
-`llm/.env` 文件中的Github和Deepseek API密钥进行配置
+
 
 
 
